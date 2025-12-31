@@ -24,29 +24,61 @@ class LiteLLMClient
     public function getLogs(?string $startDate = null, ?string $endDate = null, int $limit = 100, ?string $apiKey = null): array
     {
         $endpoints = [
-            '/v1/logs',
             '/global/activity/logs',
+            '/v1/logs',
             '/logs',
         ];
 
         foreach ($endpoints as $endpoint) {
             try {
+                $params = [
+                    'limit' => $limit,
+                ];
+
+                if ($startDate) {
+                    $params['start_date'] = $startDate;
+                }
+                if ($endDate) {
+                    $params['end_date'] = $endDate;
+                }
+                if ($apiKey) {
+                    $params['api_key'] = $apiKey;
+                }
+
                 $response = Http::withHeaders([
                     'Authorization' => "Bearer {$this->masterKey}",
-                ])->get("{$this->baseUrl}{$endpoint}", [
-                    'start_date' => $startDate,
-                    'end_date' => $endDate,
-                    'limit' => $limit,
-                    'api_key' => $apiKey,
-                ]);
+                ])->timeout(30)->get("{$this->baseUrl}{$endpoint}", $params);
 
                 if ($response->successful()) {
                     $data = $response->json();
-                    return is_array($data) ? $data : [];
+                    
+                    // Handle different response formats
+                    if (isset($data['data']) && is_array($data['data'])) {
+                        // Response format: {data: [...], total: ...}
+                        return $data['data'];
+                    } elseif (isset($data['logs']) && is_array($data['logs'])) {
+                        // Response format: {logs: [...]}
+                        return $data['logs'];
+                    } elseif (is_array($data)) {
+                        // Direct array response
+                        return $data;
+                    }
+                    
+                    Log::warning("LiteLLM logs response format unexpected", [
+                        'endpoint' => $endpoint,
+                        'response_keys' => is_array($data) ? array_keys($data) : 'not_array',
+                    ]);
+                } else {
+                    Log::warning("LiteLLM logs endpoint failed", [
+                        'endpoint' => $endpoint,
+                        'status' => $response->status(),
+                        'body' => $response->body(),
+                    ]);
                 }
             } catch (\Exception $e) {
                 Log::warning("LiteLLM logs endpoint failed: {$endpoint}", [
                     'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
                 ]);
                 continue;
             }
