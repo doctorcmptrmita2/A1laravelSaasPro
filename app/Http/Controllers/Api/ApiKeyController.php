@@ -50,13 +50,26 @@ class ApiKeyController extends Controller
      */
     public function store(Request $request)
     {
+        \Log::info('API Key creation request received', [
+            'user_id' => Auth::id(),
+            'request_data' => $request->all(),
+        ]);
+
         $request->validate([
             'name' => 'required|string|max:255',
         ]);
 
         $user = Auth::user();
         
+        if (!$user) {
+            \Log::warning('Unauthenticated user attempted to create API key');
+            return response()->json(['error' => 'Unauthenticated'], 401);
+        }
+        
         if (!$user->tenant_id) {
+            \Log::warning('User without tenant attempted to create API key', [
+                'user_id' => $user->id,
+            ]);
             return response()->json(['error' => 'No tenant associated'], 403);
         }
 

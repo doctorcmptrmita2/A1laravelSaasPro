@@ -25,6 +25,11 @@ return Application::configure(basePath: dirname(__DIR__))
         
         // Trust all proxies (Easypanel reverse proxy için)
         $middleware->trustProxies(at: '*');
+        
+        // API route'ları için CSRF token kontrolünü devre dışı bırak
+        $middleware->validateCsrfTokens(except: [
+            'api/*',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

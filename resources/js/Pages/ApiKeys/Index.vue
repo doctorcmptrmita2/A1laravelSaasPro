@@ -42,9 +42,18 @@ const createApiKey = async () => {
         errors.value = {};
         errorMessage.value = '';
         
+        console.log('Creating API key with name:', newKeyName.value.trim());
+        
         const response = await axios.post('/api/api-keys', {
             name: newKeyName.value.trim(),
+        }, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            }
         });
+        
+        console.log('API key creation response:', response);
         
         if (response.data && response.data.key) {
             createdKey.value = response.data.key;
@@ -53,19 +62,33 @@ const createApiKey = async () => {
             // showCreateModal.value = false;
             await loadApiKeys();
         } else {
-            errorMessage.value = 'Failed to create API key. Please try again.';
+            console.error('Invalid response format:', response.data);
+            errorMessage.value = 'Failed to create API key. Invalid response format.';
         }
     } catch (error) {
         console.error('Create API key error:', error);
+        console.error('Error response:', error.response);
+        console.error('Error status:', error.response?.status);
+        console.error('Error data:', error.response?.data);
         
-        if (error.response?.data?.errors) {
+        if (error.response?.status === 401 || error.response?.status === 403) {
+            errorMessage.value = 'Authentication failed. Please log in again.';
+        } else if (error.response?.status === 422) {
+            if (error.response.data?.errors) {
+                errors.value = error.response.data.errors;
+            } else if (error.response.data?.message) {
+                errorMessage.value = error.response.data.message;
+            }
+        } else if (error.response?.data?.errors) {
             errors.value = error.response.data.errors;
         } else if (error.response?.data?.message) {
             errorMessage.value = error.response.data.message;
         } else if (error.response?.data?.error) {
             errorMessage.value = error.response.data.error;
+        } else if (error.message) {
+            errorMessage.value = `Error: ${error.message}`;
         } else {
-            errorMessage.value = 'An error occurred while creating the API key. Please try again.';
+            errorMessage.value = 'An error occurred while creating the API key. Please check the console for details.';
         }
     } finally {
         creating.value = false;
