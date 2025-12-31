@@ -1,59 +1,187 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# CodexFlow SaaS Platform
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Laravel tabanlı SaaS platformu ile LiteLLM proxy sistemini yönetmek, müşterilere hizmet sunmak ve tüm işlemleri (log, maliyet, kullanım) takip etmek.
 
-## About Laravel
+## 🚀 Özellikler
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- ✅ **Multi-Tenancy**: Her müşteri kendi verilerini görür
+- ✅ **API Key Yönetimi**: LiteLLM entegrasyonu ile otomatik key oluşturma
+- ✅ **Usage Tracking**: Gerçek zamanlı kullanım ve maliyet takibi
+- ✅ **Analytics Dashboard**: Detaylı analitik ve raporlama
+- ✅ **LiteLLM Proxy**: Tüm AI provider'lara tek API ile erişim
+- ✅ **Subscription Management**: Plan yönetimi ve faturalama
+- ✅ **Professional Landing Page**: Modern ve çekici tasarım
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 📋 Gereksinimler
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- PHP 8.2+
+- PostgreSQL 15+
+- Redis 7+
+- Node.js 18+
+- Composer 2+
 
-## Learning Laravel
+## 🛠️ Kurulum
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+### 1. Repository'yi klonlayın
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```bash
+git clone https://github.com/your-username/A1laravelSaasPro.git
+cd A1laravelSaasPro
+```
 
-## Laravel Sponsors
+### 2. Dependencies yükleyin
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+```bash
+composer install
+npm install --legacy-peer-deps
+```
 
-### Premium Partners
+### 3. Environment dosyasını oluşturun
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-## Contributing
+### 4. Environment variables'ı ayarlayın
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+`.env` dosyasını düzenleyin:
 
-## Code of Conduct
+```env
+APP_NAME="CodexFlow SaaS"
+APP_ENV=local
+APP_URL=http://localhost
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DATABASE=codexflow_saas
+DB_USERNAME=codexflow
+DB_PASSWORD=your_password
 
-## Security Vulnerabilities
+LITELLM_BASE_URL=https://roo-code-orchestrator-workflow-orchestrator.lc58dd.easypanel.host/v1
+LITELLM_MASTER_KEY=sk-litellm-master-key-2025-roo-code-orchestrator
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### 5. Database migration'ları çalıştırın
 
-## License
+```bash
+php artisan migrate
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### 6. Frontend assets'leri build edin
+
+```bash
+npm run build
+```
+
+### 7. Development server'ı başlatın
+
+```bash
+php artisan serve
+```
+
+## 🐳 Docker ile Çalıştırma
+
+### Build
+
+```bash
+docker build -t codexflow-saas .
+```
+
+### Run
+
+```bash
+docker run -p 8000:8000 --env-file .env codexflow-saas
+```
+
+## 📦 Easypanel Deployment
+
+Detaylı deployment planı için `EASYPANEL_DEPLOYMENT_PLAN.md` dosyasına bakın.
+
+### Hızlı Başlangıç
+
+1. Easypanel'de yeni proje oluştur
+2. PostgreSQL servisi ekle
+3. Redis servisi ekle
+4. Laravel App servisi ekle (Dockerfile kullan)
+5. Environment variables'ı ayarla
+6. Deploy et!
+
+## 🔧 Yapılandırma
+
+### LiteLLM Entegrasyonu
+
+`config/litellm.php` dosyasından LiteLLM bağlantı ayarlarını yapılandırabilirsiniz.
+
+### Scheduled Jobs
+
+Sync job'ları otomatik çalışır:
+- **Logs Sync**: Her 5 dakika
+- **Usage Sync**: Her 15 dakika
+- **Costs Sync**: Her saat
+
+Queue worker çalıştırın:
+```bash
+php artisan queue:work
+```
+
+Scheduled job'ları aktif edin:
+```bash
+php artisan schedule:work
+```
+
+## 📚 API Dokümantasyonu
+
+### Proxy Endpoints
+
+```
+POST /api/v1/chat/completions
+POST /api/v1/completions
+POST /api/v1/embeddings
+```
+
+**Headers:**
+```
+Authorization: Bearer {API_KEY}
+Content-Type: application/json
+```
+
+### Dashboard API
+
+```
+GET  /api/api-keys          # List API keys
+POST /api/api-keys          # Create API key
+GET  /api/api-keys/{id}     # Get API key info
+DELETE /api/api-keys/{id}   # Delete API key
+```
+
+## 🗄️ Database Schema
+
+- `tenants` - Müşteri/şirket bilgileri
+- `users` - Kullanıcılar (tenant'a bağlı)
+- `subscriptions` - Abonelikler
+- `api_keys` - API key'ler
+- `usage_logs` - Kullanım logları
+- `billing_records` - Faturalama kayıtları
+- `litellm_sync_logs` - Sync logları
+
+## 🔐 Güvenlik
+
+- API key'ler hash'lenmiş saklanır
+- Multi-tenancy ile veri izolasyonu
+- Rate limiting (plan bazlı)
+- CSRF koruması
+- SQL injection koruması
+
+## 📝 Lisans
+
+Bu proje özel bir projedir.
+
+## 🤝 Destek
+
+Sorularınız için issue açabilirsiniz.
+
+---
+
+**CodexFlow SaaS** - AI API Gateway & Management Platform
