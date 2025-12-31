@@ -1,17 +1,26 @@
 #!/bin/sh
 set -e
 
-# APP_KEY kontrolü - placeholder ise boşalt
-APP_KEY_VALUE="$APP_KEY"
-if echo "$APP_KEY" | grep -qE "(base64:\.\.\.|oluşturulacak|ilk deploy)"; then
-    APP_KEY_VALUE=""
-fi
+# .env dosyasını oluşturma fonksiyonu
+setup_env() {
+    # APP_KEY kontrolü - placeholder ise boşalt
+    APP_KEY_VALUE="$APP_KEY"
+    if echo "$APP_KEY" | grep -qE "(base64:\.\.\.|oluşturulacak|ilk deploy)"; then
+        APP_KEY_VALUE=""
+    fi
 
-# .env dosyasını oluştur
-cat > /var/www/html/.env <<EOF
+    # .env dosyasını oluştur
+    cat > /var/www/html/.env <<EOF
 APP_NAME="${APP_NAME:-Laravel}"
 APP_ENV=${APP_ENV:-production}
-APP_KEY=${APP_KEY_VALUE}
+EOF
+
+    # APP_KEY varsa ekle, yoksa boş bırak (key:generate ekleyecek)
+    if [ -n "$APP_KEY_VALUE" ]; then
+        echo "APP_KEY=${APP_KEY_VALUE}" >> /var/www/html/.env
+    fi
+
+    cat >> /var/www/html/.env <<EOF
 APP_DEBUG=${APP_DEBUG:-false}
 APP_URL=${APP_URL:-http://localhost}
 
@@ -60,22 +69,36 @@ STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-}
 SANCTUM_STATEFUL_DOMAINS=${SANCTUM_STATEFUL_DOMAINS:-}
 EOF
 
-# APP_KEY yoksa veya placeholder ise oluştur
-if [ -z "$APP_KEY_VALUE" ]; then
-    echo "APP_KEY oluşturuluyor..."
-    if php artisan key:generate --force --no-interaction; then
-        echo "APP_KEY başarıyla oluşturuldu."
+    # APP_KEY yoksa veya placeholder ise oluştur
+    if [ -z "$APP_KEY_VALUE" ]; then
+        echo "APP_KEY oluşturuluyor..."
+        if php artisan key:generate --force --no-interaction; then
+            echo "APP_KEY başarıyla oluşturuldu."
+        else
+            echo "UYARI: APP_KEY oluşturulamadı, ancak devam ediliyor..."
+        fi
     else
-        echo "UYARI: APP_KEY oluşturulamadı, ancak devam ediliyor..."
+        echo "APP_KEY zaten ayarlanmış."
     fi
-else
-    echo "APP_KEY zaten ayarlanmış."
+
+    # İzinleri ayarla (hata olsa bile devam et)
+    chown -R www-data:www-data /var/www/html || true
+    chmod -R 755 /var/www/html/storage || true
+    chmod -R 755 /var/www/html/bootstrap/cache || true
+}
+
+# Eğer .env dosyası yoksa oluştur
+if [ ! -f /var/www/html/.env ]; then
+    echo ".env dosyası bulunamadı, oluşturuluyor..."
+    setup_env
 fi
 
-# İzinleri ayarla (hata olsa bile devam et)
-chown -R www-data:www-data /var/www/html || true
-chmod -R 755 /var/www/html/storage || true
-chmod -R 755 /var/www/html/bootstrap/cache || true
+# Eğer script doğrudan çalıştırılıyorsa (setup komutu olarak)
+if [ "$1" = "setup" ] || [ "$1" = "setup-env" ]; then
+    echo "Environment setup çalıştırılıyor..."
+    setup_env
+    exit 0
+fi
 
 # Orijinal komutu çalıştır
 exec "$@"
