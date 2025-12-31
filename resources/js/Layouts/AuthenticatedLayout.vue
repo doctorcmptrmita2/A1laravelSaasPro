@@ -31,19 +31,28 @@ const showingNavigationDropdown = ref(false);
 
                             <!-- Navigation Links -->
                             <div
-                                class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex"
+                                class="hidden space-x-1 sm:-my-px sm:ms-10 sm:flex"
                             >
                                 <NavLink
                                     :href="route('dashboard')"
                                     :active="route().current('dashboard')"
+                                    class="px-4 py-2 rounded-lg transition-colors"
                                 >
                                     Dashboard
                                 </NavLink>
                                 <NavLink
                                     :href="route('api-keys.page')"
                                     :active="route().current('api-keys.page')"
+                                    class="px-4 py-2 rounded-lg transition-colors"
                                 >
                                     API Keys
+                                </NavLink>
+                                <NavLink
+                                    :href="route('logs.page')"
+                                    :active="route().current('logs.page')"
+                                    class="px-4 py-2 rounded-lg transition-colors"
+                                >
+                                    Logs
                                 </NavLink>
                             </div>
                         </div>
@@ -158,6 +167,12 @@ const showingNavigationDropdown = ref(false);
                         >
                             API Keys
                         </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            :href="route('logs.page')"
+                            :active="route().current('logs.page')"
+                        >
+                            Logs
+                        </ResponsiveNavLink>
                     </div>
 
                     <!-- Responsive Settings Options -->
@@ -193,10 +208,10 @@ const showingNavigationDropdown = ref(false);
 
             <!-- Page Heading -->
             <header
-                class="bg-white shadow"
+                class="bg-gradient-to-r from-gray-50 to-white border-b border-gray-200"
                 v-if="$slots.header"
             >
-                <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+                <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
                     <slot name="header" />
                 </div>
             </header>

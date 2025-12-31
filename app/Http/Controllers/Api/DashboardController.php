@@ -34,12 +34,15 @@ class DashboardController extends Controller
         $endOfMonth = now()->endOfMonth();
 
         // Bu ay toplam API çağrıları
-        $totalRequests = UsageLog::where('tenant_id', $tenant->id)
+        // TenantScope'u bypass etmek için withoutGlobalScopes kullan
+        $totalRequests = UsageLog::withoutGlobalScopes()
+            ->where('tenant_id', $tenant->id)
             ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
             ->count();
 
         // Bu ay toplam maliyet
-        $totalCost = UsageLog::where('tenant_id', $tenant->id)
+        $totalCost = UsageLog::withoutGlobalScopes()
+            ->where('tenant_id', $tenant->id)
             ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
             ->sum('cost');
 
@@ -95,7 +98,8 @@ class DashboardController extends Controller
         // Son 30 günün günlük kullanım verileri
         $startDate = now()->subDays(30);
         
-        $usage = UsageLog::where('tenant_id', $tenant->id)
+        $usage = UsageLog::withoutGlobalScopes()
+            ->where('tenant_id', $tenant->id)
             ->where('created_at', '>=', $startDate)
             ->select(
                 DB::raw('DATE(created_at) as date'),
@@ -122,7 +126,8 @@ class DashboardController extends Controller
         }
 
         // Bu ay en çok kullanılan endpoint'ler
-        $topEndpoints = UsageLog::where('tenant_id', $tenant->id)
+        $topEndpoints = UsageLog::withoutGlobalScopes()
+            ->where('tenant_id', $tenant->id)
             ->where('created_at', '>=', now()->startOfMonth())
             ->select(
                 'endpoint',
@@ -135,7 +140,8 @@ class DashboardController extends Controller
             ->get();
 
         // Bu ay en çok kullanılan modeller
-        $topModels = UsageLog::where('tenant_id', $tenant->id)
+        $topModels = UsageLog::withoutGlobalScopes()
+            ->where('tenant_id', $tenant->id)
             ->where('created_at', '>=', now()->startOfMonth())
             ->whereNotNull('metadata->model')
             ->select(

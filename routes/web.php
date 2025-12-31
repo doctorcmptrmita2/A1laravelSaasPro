@@ -22,6 +22,10 @@ Route::middleware(['auth', 'verified', 'identify.tenant'])->group(function () {
         return Inertia::render('ApiKeys/Index');
     })->name('api-keys.page');
     
+    Route::get('/logs', function () {
+        return Inertia::render('Logs/Index');
+    })->name('logs.page');
+    
     // API endpoints (web middleware grubunu kullanarak session-based authentication)
     Route::prefix('api')->group(function () {
         // API Keys Management
@@ -31,6 +35,10 @@ Route::middleware(['auth', 'verified', 'identify.tenant'])->group(function () {
         Route::get('/dashboard/stats', [\App\Http\Controllers\Api\DashboardController::class, 'stats']);
         Route::get('/dashboard/usage', [\App\Http\Controllers\Api\DashboardController::class, 'usage']);
         Route::get('/dashboard/analytics', [\App\Http\Controllers\Api\DashboardController::class, 'analytics']);
+        
+        // Logs
+        Route::get('/logs', [\App\Http\Controllers\Api\LogsController::class, 'index']);
+        Route::get('/logs/stats', [\App\Http\Controllers\Api\LogsController::class, 'stats']);
     });
 });
 
