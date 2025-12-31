@@ -39,8 +39,15 @@ SESSION_DRIVER=${SESSION_DRIVER:-file}
 SESSION_LIFETIME=${SESSION_LIFETIME:-120}
 
 REDIS_HOST=${REDIS_HOST:-127.0.0.1}
-REDIS_PASSWORD=${REDIS_PASSWORD:-null}
 REDIS_PORT=${REDIS_PORT:-6379}
+EOF
+
+# REDIS_PASSWORD sadece gerçek bir değer varsa ekle
+if [ -n "$REDIS_PASSWORD" ] && [ "$REDIS_PASSWORD" != "null" ] && [ "$REDIS_PASSWORD" != "" ]; then
+    sed -i "/^REDIS_PORT=/a REDIS_PASSWORD=$REDIS_PASSWORD" /var/www/html/.env
+fi
+
+cat >> /var/www/html/.env <<EOF
 
 MAIL_MAILER=${MAIL_MAILER:-smtp}
 MAIL_HOST=${MAIL_HOST:-mailpit}
