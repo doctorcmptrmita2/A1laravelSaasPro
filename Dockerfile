@@ -36,7 +36,10 @@ COPY . .
 RUN composer install --optimize-autoloader --no-dev
 
 # Install Node.js dependencies and build assets
-RUN npm install --legacy-peer-deps && npm run build && rm -rf node_modules
+RUN npm install --legacy-peer-deps && \
+    npm run build && \
+    ls -la public/build || (echo "Build failed - public/build not found" && exit 1) && \
+    rm -rf node_modules
 
 # Entrypoint script
 COPY docker-entrypoint.sh /usr/local/bin/
