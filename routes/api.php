@@ -24,7 +24,8 @@ Route::prefix('v1')->group(function () {
 });
 
 // Authenticated API Routes (Dashboard API)
-Route::middleware(['auth:sanctum'])->group(function () {
+// Using 'web' guard for session-based authentication (SPA)
+Route::middleware(['auth:web'])->group(function () {
     // API Keys Management
     Route::apiResource('api-keys', ApiKeyController::class);
     

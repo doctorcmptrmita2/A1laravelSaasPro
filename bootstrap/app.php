@@ -17,6 +17,12 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
         ]);
 
+        // API route'larına session middleware'lerini ekle (SPA authentication için)
+        $middleware->api(prepend: [
+            \Illuminate\Session\Middleware\StartSession::class,
+            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+        ]);
+
         // Register custom middleware aliases
         $middleware->alias([
             'identify.tenant' => \App\Http\Middleware\IdentifyTenant::class,
