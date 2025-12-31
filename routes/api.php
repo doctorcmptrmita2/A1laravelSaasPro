@@ -23,15 +23,6 @@ Route::prefix('v1')->group(function () {
     Route::post('/embeddings', [ProxyController::class, 'embeddings']);
 });
 
-// Authenticated API Routes (Dashboard API)
-// Using 'web' guard for session-based authentication (SPA)
-Route::middleware(['auth:web'])->group(function () {
-    // API Keys Management
-    Route::apiResource('api-keys', ApiKeyController::class);
-    
-    // Dashboard Stats
-    Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
-    Route::get('/dashboard/usage', [DashboardController::class, 'usage']);
-    Route::get('/dashboard/analytics', [DashboardController::class, 'analytics']);
-});
+// Authenticated API Routes moved to web.php for session-based authentication
+// These routes are now in routes/web.php under /api prefix with web middleware
 
