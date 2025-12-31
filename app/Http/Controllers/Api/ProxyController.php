@@ -58,15 +58,32 @@ class ProxyController extends Controller
         $apiKey = Str::after($authHeader, 'Bearer ');
         
         // Find API key in database
+        // Try to find by litellm_key_id first (if it's a LiteLLM key)
         $apiKeyModel = ApiKey::where('is_active', true)
-            ->get()
-            ->first(function ($key) use ($apiKey) {
-                return $key->verifyKey($apiKey);
-            });
+            ->where('litellm_key_id', $apiKey)
+            ->first();
+        
+        // If not found, try to verify hashed key
+        if (!$apiKeyModel) {
+            $apiKeyModel = ApiKey::where('is_active', true)
+                ->get()
+                ->first(function ($key) use ($apiKey) {
+                    return $key->verifyKey($apiKey);
+                });
+        }
 
         if (!$apiKeyModel) {
+            \Log::warning('Invalid API key attempted', [
+                'key_prefix' => substr($apiKey, 0, 10) . '...',
+            ]);
             return response()->json(['error' => 'Invalid API key'], 401);
         }
+        
+        \Log::info('API key verified', [
+            'api_key_id' => $apiKeyModel->id,
+            'tenant_id' => $apiKeyModel->tenant_id,
+            'endpoint' => $endpoint,
+        ]);
 
         // Check tenant and subscription
         $tenant = $apiKeyModel->tenant;
@@ -92,9 +109,15 @@ class ProxyController extends Controller
         $response = $this->litellmClient->proxyRequest($endpoint, $request->all(), $apiKey);
         $responseTime = (microtime(true) - $startTime) * 1000; // Convert to milliseconds
 
-        // Log usage
-        if ($response['success']) {
+        // Log usage (always log, even if failed)
+        try {
             $this->logUsage($apiKeyModel, $endpoint, $request->method(), $response, $responseTime);
+        } catch (\Exception $e) {
+            \Log::error('Failed to log usage', [
+                'error' => $e->getMessage(),
+                'api_key_id' => $apiKeyModel->id,
+                'endpoint' => $endpoint,
+            ]);
         }
 
         // Return response
@@ -126,20 +149,43 @@ class ProxyController extends Controller
             $cost = $data['_response_cost'];
         }
 
-        UsageLog::create([
-            'tenant_id' => $apiKey->tenant_id,
-            'api_key_id' => $apiKey->id,
-            'endpoint' => $endpoint,
-            'method' => $method,
-            'status_code' => $response['status'] ?? 200,
-            'response_time' => (int) $responseTime,
-            'tokens_used' => $tokensUsed,
-            'cost' => $cost,
-            'metadata' => [
-                'model' => $model,
-            ],
-            'created_at' => now(),
-            'synced_at' => now(),
-        ]);
+        // Also check for cost in different formats
+        if ($cost == 0 && isset($data['cost'])) {
+            $cost = $data['cost'];
+        }
+
+        try {
+            UsageLog::withoutGlobalScopes()->create([
+                'tenant_id' => $apiKey->tenant_id,
+                'api_key_id' => $apiKey->id,
+                'endpoint' => $endpoint,
+                'method' => $method,
+                'status_code' => $response['status'] ?? ($response['success'] ? 200 : 500),
+                'response_time' => (int) $responseTime,
+                'tokens_used' => $tokensUsed,
+                'cost' => $cost,
+                'metadata' => [
+                    'model' => $model,
+                    'success' => $response['success'] ?? false,
+                ],
+                'created_at' => now(),
+                'synced_at' => now(),
+            ]);
+            
+            \Log::info('Usage logged successfully', [
+                'api_key_id' => $apiKey->id,
+                'endpoint' => $endpoint,
+                'tokens' => $tokensUsed,
+                'cost' => $cost,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Failed to create usage log', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'api_key_id' => $apiKey->id,
+                'endpoint' => $endpoint,
+            ]);
+            throw $e;
+        }
     }
 }
