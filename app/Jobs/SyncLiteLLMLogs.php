@@ -67,6 +67,9 @@ class SyncLiteLLMLogs implements ShouldQueue
                 \Log::info('Fetched logs from LiteLLM', [
                     'count' => count($logs),
                     'tenant_id' => $tenant->id,
+                    'start_date' => $startDate,
+                    'end_date' => $endDate,
+                    'sample_log' => count($logs) > 0 ? $logs[0] : null,
                 ]);
 
                 foreach ($logs as $log) {
@@ -81,29 +84,36 @@ class SyncLiteLLMLogs implements ShouldQueue
 
                     // Find API key by key hash or user_api_key
                     $apiKey = null;
-                    $keyHash = $log['key_hash'] ?? $log['user_api_key'] ?? null;
+                    $keyHash = $log['key_hash'] ?? $log['user_api_key'] ?? $log['api_key'] ?? null;
                     
                     if ($keyHash) {
-                        // Try to find by litellm_key_id (which might be the key hash)
-                        $apiKey = $apiKeys->first(function ($key) use ($keyHash) {
-                            return $key->litellm_key_id === $keyHash || 
-                                   hash('sha256', $key->litellm_key_id) === $keyHash ||
-                                   substr(hash('sha256', $key->litellm_key_id), 0, 16) === substr($keyHash, 0, 16);
-                        });
-                    }
-                    
-                    // If still not found, try to match by checking all API keys
-                    if (!$apiKey) {
+                        // Try to find by matching key hash with stored API keys
+                        // LiteLLM stores key_hash as SHA256 hash of the API key
                         foreach ($apiKeys as $key) {
-                            // Check if the log's key hash matches this API key
-                            $keyToCheck = $key->litellm_key_id ?? $key->key;
-                            if ($keyHash && (
-                                $keyHash === $keyToCheck ||
-                                $keyHash === hash('sha256', $keyToCheck) ||
-                                substr($keyHash, 0, 16) === substr(hash('sha256', $keyToCheck), 0, 16)
-                            )) {
+                            // Get the actual API key (we need to check the hashed key in database)
+                            // Since key is hashed in database, we need to check litellm_key_id
+                            // or try to match the hash
+                            
+                            // First, try direct match with litellm_key_id
+                            if ($key->litellm_key_id === $keyHash) {
                                 $apiKey = $key;
                                 break;
+                            }
+                            
+                            // Try matching with hash of litellm_key_id (if it's the actual key)
+                            $hashedKeyId = hash('sha256', $key->litellm_key_id);
+                            if ($hashedKeyId === $keyHash || substr($hashedKeyId, 0, 16) === substr($keyHash, 0, 16)) {
+                                $apiKey = $key;
+                                break;
+                            }
+                            
+                            // If litellm_key_id is the actual API key (starts with 'sk-'), hash it
+                            if (str_starts_with($key->litellm_key_id, 'sk-')) {
+                                $hashedActualKey = hash('sha256', $key->litellm_key_id);
+                                if ($hashedActualKey === $keyHash || substr($hashedActualKey, 0, 16) === substr($keyHash, 0, 16)) {
+                                    $apiKey = $key;
+                                    break;
+                                }
                             }
                         }
                     }
@@ -112,6 +122,8 @@ class SyncLiteLLMLogs implements ShouldQueue
                         \Log::debug('API key not found for log', [
                             'key_hash' => $keyHash,
                             'log_id' => $log['id'] ?? $log['request_id'] ?? null,
+                            'available_keys' => $apiKeys->pluck('litellm_key_id')->toArray(),
+                            'log_keys' => array_keys($log),
                         ]);
                         continue;
                     }
