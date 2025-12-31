@@ -74,7 +74,7 @@ onMounted(async () => {
                                 {{ stats.activeKeys }}
                             </div>
                             <div class="mt-1 text-xs text-gray-500">
-                                <Link :href="route('api-keys.index')" class="text-blue-600 hover:text-blue-800">
+                                <Link :href="route('api-keys.page')" class="text-blue-600 hover:text-blue-800">
                                     Manage keys
                                 </Link>
                             </div>
@@ -98,7 +98,7 @@ onMounted(async () => {
                         <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
                         <div class="flex gap-4">
                             <Link
-                                :href="route('api-keys.index')"
+                                :href="route('api-keys.page')"
                                 class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
                             >
                                 Manage API Keys

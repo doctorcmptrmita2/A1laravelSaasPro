@@ -20,7 +20,7 @@ Route::get('/dashboard', function () {
 Route::middleware(['auth', 'verified', 'identify.tenant'])->group(function () {
     Route::get('/api-keys', function () {
         return Inertia::render('ApiKeys/Index');
-    })->name('api-keys.index');
+    })->name('api-keys.page');
 });
 
 Route::middleware('auth')->group(function () {
