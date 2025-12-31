@@ -12,7 +12,9 @@ class LiteLLMClient
 
     public function __construct()
     {
-        $this->baseUrl = config('litellm.base_url');
+        $baseUrl = config('litellm.base_url');
+        // Remove trailing /v1 from base URL if present (endpoints already include /v1)
+        $this->baseUrl = rtrim($baseUrl, '/v1');
         $this->masterKey = config('litellm.master_key');
     }
 
@@ -193,24 +195,46 @@ class LiteLLMClient
         $endpoints = [
             '/v1/key/generate',
             '/key/generate',
+            '/key/new',
         ];
 
         foreach ($endpoints as $endpoint) {
             try {
                 $response = Http::withHeaders([
                     'Authorization' => "Bearer {$this->masterKey}",
-                ])->post("{$this->baseUrl}{$endpoint}", $data);
+                    'Content-Type' => 'application/json',
+                ])->timeout(10)->post("{$this->baseUrl}{$endpoint}", $data);
+
+                Log::info("LiteLLM createKey request", [
+                    'endpoint' => "{$this->baseUrl}{$endpoint}",
+                    'status' => $response->status(),
+                    'response' => $response->json(),
+                ]);
 
                 if ($response->successful()) {
-                    return $response->json();
+                    $json = $response->json();
+                    Log::info("LiteLLM createKey success", ['response' => $json]);
+                    return $json;
+                } else {
+                    Log::warning("LiteLLM createKey failed", [
+                        'endpoint' => $endpoint,
+                        'status' => $response->status(),
+                        'body' => $response->body(),
+                    ]);
                 }
             } catch (\Exception $e) {
-                Log::warning("LiteLLM create key endpoint failed: {$endpoint}", [
+                Log::error("LiteLLM create key endpoint exception: {$endpoint}", [
                     'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
                 ]);
                 continue;
             }
         }
+
+        Log::error("LiteLLM createKey: All endpoints failed", [
+            'base_url' => $this->baseUrl,
+            'endpoints' => $endpoints,
+        ]);
 
         return null;
     }
