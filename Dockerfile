@@ -26,6 +26,10 @@ COPY . .
 # Install dependencies
 RUN composer install --optimize-autoloader --no-dev
 
+# Entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 # Permissions
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html/storage \
@@ -34,5 +38,8 @@ RUN chown -R www-data:www-data /var/www/html \
 # Expose port
 EXPOSE 8000
 
+# Entrypoint
+ENTRYPOINT ["docker-entrypoint.sh"]
+
 # Start command
-CMD php artisan serve --host=0.0.0.0 --port=8000
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
