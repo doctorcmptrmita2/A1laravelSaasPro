@@ -52,27 +52,39 @@ class LiteLLMClient
                 if ($response->successful()) {
                     $data = $response->json();
                     
+                    Log::info("LiteLLM logs endpoint response", [
+                        'endpoint' => $endpoint,
+                        'status' => $response->status(),
+                        'response_type' => gettype($data),
+                        'response_keys' => is_array($data) ? array_keys($data) : 'not_array',
+                        'response_sample' => is_array($data) && count($data) > 0 ? array_slice($data, 0, 1) : $data,
+                    ]);
+                    
                     // Handle different response formats
                     if (isset($data['data']) && is_array($data['data'])) {
                         // Response format: {data: [...], total: ...}
+                        Log::info("LiteLLM logs: Using 'data' key", ['count' => count($data['data'])]);
                         return $data['data'];
                     } elseif (isset($data['logs']) && is_array($data['logs'])) {
                         // Response format: {logs: [...]}
+                        Log::info("LiteLLM logs: Using 'logs' key", ['count' => count($data['logs'])]);
                         return $data['logs'];
-                    } elseif (is_array($data)) {
+                    } elseif (is_array($data) && isset($data[0])) {
                         // Direct array response
+                        Log::info("LiteLLM logs: Direct array response", ['count' => count($data)]);
                         return $data;
                     }
                     
                     Log::warning("LiteLLM logs response format unexpected", [
                         'endpoint' => $endpoint,
                         'response_keys' => is_array($data) ? array_keys($data) : 'not_array',
+                        'response' => $data,
                     ]);
                 } else {
                     Log::warning("LiteLLM logs endpoint failed", [
                         'endpoint' => $endpoint,
                         'status' => $response->status(),
-                        'body' => $response->body(),
+                        'body' => substr($response->body(), 0, 500), // İlk 500 karakter
                     ]);
                 }
             } catch (\Exception $e) {

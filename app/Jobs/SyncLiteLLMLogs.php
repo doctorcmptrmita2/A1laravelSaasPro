@@ -62,6 +62,13 @@ class SyncLiteLLMLogs implements ShouldQueue
                     ->get();
 
                 // Fetch all logs from LiteLLM (without filtering by API key first)
+                \Log::info('Fetching logs from LiteLLM', [
+                    'tenant_id' => $tenant->id,
+                    'start_date' => $startDate,
+                    'end_date' => $endDate,
+                    'base_url' => config('litellm.base_url'),
+                ]);
+                
                 $logs = $litellmClient->getLogs($startDate, $endDate, 1000, null);
 
                 \Log::info('Fetched logs from LiteLLM', [
@@ -70,6 +77,7 @@ class SyncLiteLLMLogs implements ShouldQueue
                     'start_date' => $startDate,
                     'end_date' => $endDate,
                     'sample_log' => count($logs) > 0 ? $logs[0] : null,
+                    'all_log_keys' => count($logs) > 0 ? array_keys($logs[0]) : [],
                 ]);
 
                 foreach ($logs as $log) {
