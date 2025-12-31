@@ -15,11 +15,35 @@ return [
     |
     */
 
-    'stateful' => array_filter(array_map('trim', explode(',', env('SANCTUM_STATEFUL_DOMAINS', sprintf(
-        '%s%s',
-        'localhost,localhost:3000,127.0.0.1,127.0.0.1:8000,::1',
-        Sanctum::currentApplicationUrlWithPort() ? ',' . parse_url(Sanctum::currentApplicationUrlWithPort(), PHP_URL_HOST) : '',
-    ))))),
+    'stateful' => function() {
+        $domains = array_filter(array_map('trim', explode(',', env('SANCTUM_STATEFUL_DOMAINS', ''))));
+        
+        // Eğer SANCTUM_STATEFUL_DOMAINS ayarlanmışsa, onu kullan
+        if (!empty($domains)) {
+            // Protokolü kaldır (https:// veya http://)
+            $domains = array_map(function($domain) {
+                $domain = preg_replace('#^https?://#', '', $domain);
+                // Port varsa kaldır (domain:port formatı)
+                $domain = explode(':', $domain)[0];
+                return trim($domain);
+            }, $domains);
+            return array_filter($domains);
+        }
+        
+        // Varsayılan domain'ler
+        $defaultDomains = ['localhost', 'localhost:3000', '127.0.0.1', '127.0.0.1:8000', '::1'];
+        
+        // APP_URL'den domain çıkar
+        $appUrl = config('app.url');
+        if ($appUrl) {
+            $host = parse_url($appUrl, PHP_URL_HOST);
+            if ($host) {
+                $defaultDomains[] = $host;
+            }
+        }
+        
+        return array_unique(array_filter($defaultDomains));
+    }(),
 
     /*
     |--------------------------------------------------------------------------
