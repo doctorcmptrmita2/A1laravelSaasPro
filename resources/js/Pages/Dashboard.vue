@@ -2,6 +2,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { ref, onMounted } from 'vue';
+import axios from 'axios';
 
 const stats = ref({
     totalRequests: 0,
@@ -14,19 +15,17 @@ const loading = ref(true);
 
 onMounted(async () => {
     try {
-        // TODO: Fetch stats from API
-        // const response = await axios.get('/api/dashboard/stats');
-        // stats.value = response.data;
-        
-        // Placeholder data
+        const response = await axios.get('/api/dashboard/stats');
+        stats.value = response.data;
+    } catch (error) {
+        console.error('Failed to load stats:', error);
+        // Hata durumunda placeholder data göster
         stats.value = {
             totalRequests: 0,
             totalCost: 0,
             activeKeys: 0,
             usagePercentage: 0,
         };
-    } catch (error) {
-        console.error('Failed to load stats:', error);
     } finally {
         loading.value = false;
     }

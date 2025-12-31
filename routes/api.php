@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\ApiKeyController;
+use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\ProxyController;
 use Illuminate\Support\Facades\Route;
 
@@ -27,9 +28,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // API Keys Management
     Route::apiResource('api-keys', ApiKeyController::class);
     
-    // Dashboard Stats (will be added later)
-    // Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
-    // Route::get('/dashboard/usage', [DashboardController::class, 'usage']);
-    // Route::get('/dashboard/analytics', [DashboardController::class, 'analytics']);
+    // Dashboard Stats
+    Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
+    Route::get('/dashboard/usage', [DashboardController::class, 'usage']);
+    Route::get('/dashboard/analytics', [DashboardController::class, 'analytics']);
 });
 
