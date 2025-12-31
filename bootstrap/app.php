@@ -17,8 +17,10 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
         ]);
 
-        // API route'larına session middleware'lerini ekle (SPA authentication için)
+        // API route'larına web middleware'lerini ekle (SPA authentication için)
+        // Session, cookie encryption ve CSRF için web middleware'leri gerekli
         $middleware->api(prepend: [
+            \Illuminate\Cookie\Middleware\EncryptCookies::class,
             \Illuminate\Session\Middleware\StartSession::class,
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
         ]);
