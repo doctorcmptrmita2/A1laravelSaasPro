@@ -39,6 +39,9 @@ RUN composer install --optimize-autoloader --no-dev
 RUN npm install --legacy-peer-deps && \
     npm run build && \
     ls -la public/build || (echo "Build failed - public/build not found" && exit 1) && \
+    # Laravel Vite plugin manifest dosyasını public/build/manifest.json'da arıyor
+    # Vite ise public/build/.vite/manifest.json oluşturuyor, kopyalıyoruz
+    cp public/build/.vite/manifest.json public/build/manifest.json 2>/dev/null || true && \
     rm -rf node_modules
 
 # Entrypoint script
