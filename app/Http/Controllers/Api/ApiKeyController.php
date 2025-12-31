@@ -61,20 +61,44 @@ class ApiKeyController extends Controller
         }
 
         // Create API key in LiteLLM
-        $litellmResponse = $this->litellmClient->createKey([
-            'metadata' => [
-                'tenant_id' => $user->tenant_id,
+        try {
+            $litellmResponse = $this->litellmClient->createKey([
+                'metadata' => [
+                    'tenant_id' => $user->tenant_id,
+                    'user_id' => $user->id,
+                    'user_email' => $user->email,
+                ],
+            ]);
+
+            if (!$litellmResponse) {
+                \Log::error('LiteLLM createKey returned null', [
+                    'user_id' => $user->id,
+                    'tenant_id' => $user->tenant_id,
+                ]);
+                return response()->json(['error' => 'Failed to create API key in LiteLLM. Please check LiteLLM configuration.'], 500);
+            }
+
+            // LiteLLM response format: {'key': 'sk-...', 'key_id': '...'} veya {'key': 'sk-...'}
+            $litellmKey = $litellmResponse['key'] ?? $litellmResponse['api_key'] ?? null;
+            $litellmKeyId = $litellmResponse['key_id'] ?? $litellmResponse['id'] ?? $litellmKey;
+
+            if (!$litellmKey) {
+                \Log::error('LiteLLM createKey response missing key', [
+                    'response' => $litellmResponse,
+                    'user_id' => $user->id,
+                    'tenant_id' => $user->tenant_id,
+                ]);
+                return response()->json(['error' => 'Invalid response from LiteLLM. Please check LiteLLM configuration.'], 500);
+            }
+        } catch (\Exception $e) {
+            \Log::error('Exception creating API key in LiteLLM', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
                 'user_id' => $user->id,
-                'user_email' => $user->email,
-            ],
-        ]);
-
-        if (!$litellmResponse || !isset($litellmResponse['key'])) {
-            return response()->json(['error' => 'Failed to create API key in LiteLLM'], 500);
+                'tenant_id' => $user->tenant_id,
+            ]);
+            return response()->json(['error' => 'Failed to create API key: ' . $e->getMessage()], 500);
         }
-
-        $litellmKeyId = $litellmResponse['key_id'] ?? $litellmResponse['key'];
-        $litellmKey = $litellmResponse['key'];
 
         // Store in database
         $apiKey = ApiKey::create([

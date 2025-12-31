@@ -16,6 +16,8 @@ const showCreateModal = ref(false);
 const newKeyName = ref('');
 const errors = ref({});
 const createdKey = ref(null);
+const creating = ref(false);
+const errorMessage = ref('');
 
 const loadApiKeys = async () => {
     try {
@@ -30,20 +32,43 @@ const loadApiKeys = async () => {
 };
 
 const createApiKey = async () => {
+    if (!newKeyName.value.trim()) {
+        errors.value = { name: ['Key name is required'] };
+        return;
+    }
+
     try {
+        creating.value = true;
         errors.value = {};
+        errorMessage.value = '';
+        
         const response = await axios.post('/api/api-keys', {
-            name: newKeyName.value,
+            name: newKeyName.value.trim(),
         });
         
-        createdKey.value = response.data.key;
-        newKeyName.value = '';
-        showCreateModal.value = false;
-        await loadApiKeys();
+        if (response.data && response.data.key) {
+            createdKey.value = response.data.key;
+            newKeyName.value = '';
+            // Modal'ı kapatma - kullanıcı key'i kopyalayabilsin
+            // showCreateModal.value = false;
+            await loadApiKeys();
+        } else {
+            errorMessage.value = 'Failed to create API key. Please try again.';
+        }
     } catch (error) {
+        console.error('Create API key error:', error);
+        
         if (error.response?.data?.errors) {
             errors.value = error.response.data.errors;
+        } else if (error.response?.data?.message) {
+            errorMessage.value = error.response.data.message;
+        } else if (error.response?.data?.error) {
+            errorMessage.value = error.response.data.error;
+        } else {
+            errorMessage.value = 'An error occurred while creating the API key. Please try again.';
         }
+    } finally {
+        creating.value = false;
     }
 };
 
@@ -61,10 +86,35 @@ const deleteApiKey = async (id) => {
     }
 };
 
-const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text).then(() => {
+const copyToClipboard = async (text) => {
+    try {
+        await navigator.clipboard.writeText(text);
         alert('API key copied to clipboard!');
-    });
+    } catch (err) {
+        console.error('Failed to copy:', err);
+        // Fallback: select text
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+            document.execCommand('copy');
+            alert('API key copied to clipboard!');
+        } catch (e) {
+            alert('Failed to copy. Please copy manually.');
+        }
+        document.body.removeChild(textarea);
+    }
+};
+
+const closeModal = () => {
+    showCreateModal.value = false;
+    createdKey.value = null;
+    newKeyName.value = '';
+    errors.value = {};
+    errorMessage.value = '';
 };
 
 onMounted(() => {
@@ -133,9 +183,13 @@ onMounted(() => {
         </div>
 
         <!-- Create API Key Modal -->
-        <Modal :show="showCreateModal" @close="showCreateModal = false">
+        <Modal :show="showCreateModal" @close="closeModal">
             <div class="p-6">
                 <h2 class="text-lg font-medium text-gray-900 mb-4">Create API Key</h2>
+
+                <div v-if="errorMessage" class="mb-4 p-4 bg-red-50 border border-red-200 rounded">
+                    <p class="text-sm text-red-800">{{ errorMessage }}</p>
+                </div>
 
                 <div class="mb-4">
                     <InputLabel for="name" value="Key Name" />
@@ -145,8 +199,10 @@ onMounted(() => {
                         type="text"
                         class="mt-1 block w-full"
                         placeholder="My API Key"
+                        :disabled="creating || !!createdKey"
+                        @keyup.enter="createApiKey"
                     />
-                    <InputError :message="errors.name" class="mt-2" />
+                    <InputError :message="errors.name?.[0]" class="mt-2" />
                 </div>
 
                 <div v-if="createdKey" class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded">
@@ -154,7 +210,7 @@ onMounted(() => {
                         ⚠️ Important: Save this API key now. You won't be able to see it again!
                     </p>
                     <div class="flex items-center gap-2">
-                        <code class="flex-1 p-2 bg-white border border-yellow-300 rounded text-sm">
+                        <code class="flex-1 p-2 bg-white border border-yellow-300 rounded text-sm break-all">
                             {{ createdKey }}
                         </code>
                         <PrimaryButton @click="copyToClipboard(createdKey)">
@@ -165,13 +221,18 @@ onMounted(() => {
 
                 <div class="flex justify-end gap-3">
                     <button
-                        @click="showCreateModal = false; createdKey = null; newKeyName = ''"
+                        @click="closeModal"
                         class="px-4 py-2 text-sm text-gray-700 hover:text-gray-900"
+                        :disabled="creating"
                     >
-                        Cancel
+                        {{ createdKey ? 'Close' : 'Cancel' }}
                     </button>
-                    <PrimaryButton @click="createApiKey">
-                        Create
+                    <PrimaryButton 
+                        @click="createApiKey"
+                        :disabled="creating || !!createdKey"
+                    >
+                        <span v-if="creating">Creating...</span>
+                        <span v-else>Create</span>
                     </PrimaryButton>
                 </div>
             </div>
