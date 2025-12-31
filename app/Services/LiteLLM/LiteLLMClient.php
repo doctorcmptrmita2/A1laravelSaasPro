@@ -24,9 +24,11 @@ class LiteLLMClient
     public function getLogs(?string $startDate = null, ?string $endDate = null, int $limit = 100, ?string $apiKey = null): array
     {
         $endpoints = [
-            '/global/activity/logs',
             '/v1/logs',
             '/logs',
+            '/global/activity/logs',
+            '/ui/logs',
+            '/api/logs',
         ];
 
         foreach ($endpoints as $endpoint) {
