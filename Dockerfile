@@ -10,7 +10,9 @@ RUN apk add --no-cache \
     unzip \
     postgresql-dev \
     oniguruma-dev \
-    redis
+    redis \
+    nodejs \
+    npm
 
 # PHP extensions
 RUN docker-php-ext-install pdo_pgsql pdo_mysql mbstring exif pcntl bcmath gd zip
@@ -30,8 +32,11 @@ WORKDIR /var/www/html
 # Copy application
 COPY . .
 
-# Install dependencies
+# Install PHP dependencies
 RUN composer install --optimize-autoloader --no-dev
+
+# Install Node.js dependencies and build assets
+RUN npm ci && npm run build && rm -rf node_modules
 
 # Entrypoint script
 COPY docker-entrypoint.sh /usr/local/bin/
