@@ -23,14 +23,14 @@ return new class extends Migration
             $table->integer('tokens_used')->default(0);
             $table->decimal('cost', 10, 6)->default(0);
             $table->json('metadata')->nullable(); // model, user_id, etc.
-            $table->timestamp('created_at'); // LiteLLM'den gelen timestamp
+            $table->timestamp('litellm_created_at')->nullable(); // LiteLLM'den gelen timestamp
             $table->timestamp('synced_at')->nullable(); // Laravel'de sync edilme zamanı
-            $table->timestamps();
+            $table->timestamps(); // Laravel'in standart created_at ve updated_at
             
             $table->index('tenant_id');
             $table->index('api_key_id');
             $table->index('litellm_log_id');
-            $table->index('created_at');
+            $table->index('litellm_created_at');
         });
     }
 
