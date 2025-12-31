@@ -16,11 +16,9 @@ return [
     */
 
     'stateful' => array_filter(array_map('trim', explode(',', env('SANCTUM_STATEFUL_DOMAINS', sprintf(
-        '%s%s%s',
+        '%s%s',
         'localhost,localhost:3000,127.0.0.1,127.0.0.1:8000,::1',
-        Sanctum::currentApplicationUrlWithPort() ? ',' . Sanctum::currentApplicationUrlWithPort() : '',
-        // Easypanel domain pattern
-        ',*.easypanel.host,*.lc58dd.easypanel.host',
+        Sanctum::currentApplicationUrlWithPort() ? ',' . parse_url(Sanctum::currentApplicationUrlWithPort(), PHP_URL_HOST) : '',
     ))))),
 
     /*
