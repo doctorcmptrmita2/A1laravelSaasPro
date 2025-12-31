@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class LiteLLMSyncLog extends Model
 {
+    protected $table = 'litellm_sync_logs';
+
     protected $fillable = [
         'sync_type',
         'status',
