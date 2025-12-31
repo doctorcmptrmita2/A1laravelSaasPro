@@ -39,6 +39,12 @@ const showingNavigationDropdown = ref(false);
                                 >
                                     Dashboard
                                 </NavLink>
+                                <NavLink
+                                    :href="route('api-keys.page')"
+                                    :active="route().current('api-keys.page')"
+                                >
+                                    API Keys
+                                </NavLink>
                             </div>
                         </div>
 
@@ -145,6 +151,12 @@ const showingNavigationDropdown = ref(false);
                             :active="route().current('dashboard')"
                         >
                             Dashboard
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            :href="route('api-keys.page')"
+                            :active="route().current('api-keys.page')"
+                        >
+                            API Keys
                         </ResponsiveNavLink>
                     </div>
 
