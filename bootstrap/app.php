@@ -22,6 +22,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'identify.tenant' => \App\Http\Middleware\IdentifyTenant::class,
             'ensure.subscription' => \App\Http\Middleware\EnsureSubscription::class,
         ]);
+        
+        // Trust all proxies (Easypanel reverse proxy için)
+        $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
