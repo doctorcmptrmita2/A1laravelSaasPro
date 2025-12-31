@@ -10,17 +10,11 @@ setup_env() {
     fi
 
     # .env dosyasını oluştur
+    # APP_KEY her zaman eklenmeli (boş olsa bile), Laravel bunu arıyor
     cat > /var/www/html/.env <<EOF
 APP_NAME="${APP_NAME:-Laravel}"
 APP_ENV=${APP_ENV:-production}
-EOF
-
-    # APP_KEY varsa ekle, yoksa boş bırak (key:generate ekleyecek)
-    if [ -n "$APP_KEY_VALUE" ]; then
-        echo "APP_KEY=${APP_KEY_VALUE}" >> /var/www/html/.env
-    fi
-
-    cat >> /var/www/html/.env <<EOF
+APP_KEY=${APP_KEY_VALUE}
 APP_DEBUG=${APP_DEBUG:-false}
 APP_URL=${APP_URL:-http://localhost}
 

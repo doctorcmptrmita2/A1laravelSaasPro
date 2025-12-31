@@ -9,10 +9,17 @@ RUN apk add --no-cache \
     zip \
     unzip \
     postgresql-dev \
-    oniguruma-dev
+    oniguruma-dev \
+    redis
 
 # PHP extensions
 RUN docker-php-ext-install pdo_pgsql pdo_mysql mbstring exif pcntl bcmath gd zip
+
+# Redis extension
+RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
+    && apk del .build-deps
 
 # Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -29,6 +36,10 @@ RUN composer install --optimize-autoloader --no-dev
 # Entrypoint script
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# Setup script (manuel kullanım için)
+COPY setup-env.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/setup-env.sh
 
 # Permissions
 RUN chown -R www-data:www-data /var/www/html \
