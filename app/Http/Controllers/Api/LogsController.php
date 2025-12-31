@@ -66,14 +66,20 @@ class LogsController extends Controller
         $startDate = $request->get('start_date', now()->subDays(30)->format('Y-m-d'));
         $endDate = $request->get('end_date', now()->format('Y-m-d'));
 
-        $stats = UsageLog::withoutGlobalScopes()
-            ->where('tenant_id', $tenant->id)
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->select(
+        // Tarih filtresi olmadan tüm logları al
+        $query = UsageLog::withoutGlobalScopes()
+            ->where('tenant_id', $tenant->id);
+        
+        // Tarih filtresi varsa uygula
+        if ($startDate && $endDate) {
+            $query->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+        }
+        
+        $stats = $query->select(
                 DB::raw('COUNT(*) as total_requests'),
-                DB::raw('SUM(cost) as total_cost'),
-                DB::raw('SUM(tokens_used) as total_tokens'),
-                DB::raw('AVG(response_time) as avg_response_time')
+                DB::raw('COALESCE(SUM(cost), 0) as total_cost'),
+                DB::raw('COALESCE(SUM(tokens_used), 0) as total_tokens'),
+                DB::raw('COALESCE(AVG(response_time), 0) as avg_response_time')
             )
             ->first();
 
